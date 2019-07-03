@@ -47,6 +47,13 @@ class Snake
         end
     end
 
+    def x
+        head[0]
+    end
+
+    def y
+        head[1]
+    end
 
     private 
 
@@ -70,6 +77,16 @@ class Game
         Square.new(x: @cube_x * GRID_SIZE, y: @cube_y * GRID_SIZE, size: GRID_SIZE , color: 'red')
         Text.new('Score: '+ @score.to_s, color: 'green', x: 10, y: 10, size: 25)
     end
+
+    def snake_hit_cube?(x,y)
+        @cube_x == x && @cube_y == y
+    end
+
+    def record_hit 
+        @score += 1
+        @cube_x = rand(GRID_WIDTH)
+        @cube_y = rand(GRID_HEIGHT)
+    end
 end
 
 snake = Snake.new
@@ -82,6 +99,10 @@ update do
     snake.move
     snake.draw
     game.draw
+
+    if game.snake_hit_cube?(snake.x, snake.y)
+        game.record_hit        
+    end
 end
 
 #read key from keyboard
