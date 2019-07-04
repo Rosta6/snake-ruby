@@ -16,6 +16,7 @@ class Snake
     def initialize
         @positions = [[2,0],[2,1],[2,2],[2,3]]
         @direction = 'down'
+        @growing= false
     end
 
     def draw
@@ -25,7 +26,10 @@ class Snake
     end
 
     def move
-        @positions.shift
+        if !@growing
+         @positions.shift
+        end
+
         case  @direction
         when 'down'
             @positions.push(new_coords(head[0], head[1] + 1))
@@ -36,6 +40,7 @@ class Snake
         when 'right'
             @positions.push(new_coords(head[0] + 1, head[1]))
         end
+        @growing = false
     end
 
     def can_change_direction_to?(new_direction)
@@ -55,6 +60,14 @@ class Snake
         head[1]
     end
 
+    def grow
+        @growing = true
+    end
+
+    def hit_itself?
+        @positions.uniq.length != @positions.length
+    end
+
     private 
 
     def new_coords(x,y)
@@ -71,11 +84,14 @@ class Game
         @score = 0
         @cube_x = rand(GRID_WIDTH)
         @cube_y = rand(GRID_HEIGHT)
+        @finished = false
     end
 
     def draw
+        unless finished?
         Square.new(x: @cube_x * GRID_SIZE, y: @cube_y * GRID_SIZE, size: GRID_SIZE , color: 'red')
-        Text.new('Score: '+ @score.to_s, color: 'green', x: 10, y: 10, size: 25)
+        end
+        Text.new(text_message, color: 'green', x: 10, y: 10, size: 25)
     end
 
     def snake_hit_cube?(x,y)
@@ -87,6 +103,22 @@ class Game
         @cube_x = rand(GRID_WIDTH)
         @cube_y = rand(GRID_HEIGHT)
     end
+
+    def finish
+        @finished = true
+    end
+
+    def finished?
+        @finished
+    end
+
+    def text_message
+        if finished?
+        "Game over, your score was: #{@score}. Press R to restart."
+        else
+        "Score: #{@score}"
+        end
+    end
 end
 
 snake = Snake.new
@@ -95,13 +127,20 @@ game = Game.new
 
 update do
     clear
-
+   
+    unless game.finished?
     snake.move
+    end
     snake.draw
     game.draw
 
     if game.snake_hit_cube?(snake.x, snake.y)
-        game.record_hit        
+        game.record_hit  
+        snake.grow      
+    end
+
+    if snake.hit_itself?
+        game.finish
     end
 end
 
@@ -111,6 +150,9 @@ on :key_down do |event|
         if snake.can_change_direction_to?(event.key)
         snake.direction = event.key
         end
+    elsif event.key == "r"
+        snake = Snake.new
+        game = Game.new
     end
 end
 
